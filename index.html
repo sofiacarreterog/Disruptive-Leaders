@@ -1,8 +1,9 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>Clean Up – QR Recycling Prototype</title>
+  <title>ClienUp – QR Recycling Prototype</title>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <style>
@@ -113,6 +114,7 @@
       align-items: center;
       gap: 8px;
       margin-bottom: 8px;
+      flex-wrap: wrap;
     }
 
     .points-card {
@@ -130,15 +132,31 @@
       font-weight: 800;
     }
 
+    .meta-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 10px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+
+    .pill {
+      display: inline-block;
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 700;
+      background: rgba(255,255,255,0.18);
+      border: 1px solid rgba(255,255,255,0.25);
+    }
+
     .how-steps {
       font-size: 13px;
       color: #003366;
       padding-left: 18px;
     }
 
-    .how-steps li {
-      margin-bottom: 4px;
-    }
+    .how-steps li { margin-bottom: 4px; }
 
     .step-badge {
       display: inline-block;
@@ -213,7 +231,6 @@
       color: #002145;
     }
 
-    /* video previews in history */
     video {
       margin-top: 8px;
       width: 100%;
@@ -222,7 +239,6 @@
       background-color: black;
     }
 
-    /* filename text */
     .file-name {
       display: block;
       margin-top: 6px;
@@ -231,7 +247,6 @@
       word-break: break-all;
     }
 
-    /* QR display boxes */
     .qr-section {
       margin-top: 12px;
       padding: 10px;
@@ -247,6 +262,94 @@
       justify-content: center;
     }
 
+    /* Leaderboard */
+    .leaderboard {
+      display: grid;
+      gap: 10px;
+    }
+    .leader-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 12px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.05);
+      font-size: 13px;
+    }
+    .leader-left {
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      min-width: 0;
+    }
+    .rank-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 999px;
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      background: #0051A2;
+      color: white;
+      flex: 0 0 28px;
+    }
+    .me-badge {
+      font-size: 11px;
+      font-weight: 800;
+      padding: 3px 8px;
+      border-radius: 999px;
+      background: #FFE082;
+      color: #795548;
+      margin-left: 6px;
+      flex: 0 0 auto;
+    }
+    .leader-name {
+      font-weight: 800;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+      max-width: 210px;
+    }
+    .leader-sub {
+      font-size: 11px;
+      color: #335;
+      margin-top: 2px;
+    }
+    .leader-right {
+      text-align: right;
+      font-weight: 800;
+    }
+
+    .badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 10px;
+    }
+    .badge {
+      font-size: 12px;
+      font-weight: 800;
+      padding: 6px 10px;
+      border-radius: 999px;
+      background: #E3F2FD;
+      color: #0D47A1;
+      border: 1px solid rgba(13,71,161,0.15);
+    }
+
+    /* "Not you?" link style */
+    .link-btn {
+      border: none;
+      background: transparent;
+      padding: 0;
+      margin: 0;
+      font: inherit;
+      cursor: pointer;
+      text-decoration: underline;
+      color: #0051A2;
+      font-weight: 700;
+      font-size: 13px;
+    }
+
     #mainView { display: none; }
   </style>
 </head>
@@ -256,9 +359,9 @@
 
     <!-- LOGIN -->
     <div id="loginView" class="card">
-      <img src="IE_University_logo.svg" class="ie-logo" alt="IE University">
+      <img src="images/IE_University_logo.svg" class="ie-logo" alt="IE University">
 
-      <h1>Cl(ie)an Up</h1>
+      <h1>ClienUp</h1>
       <p class="subtitle">Earn cafeteria rewards for reducing rubbish on campus 🌱</p>
 
       <div id="loginMessage" class="message-bar"></div>
@@ -280,7 +383,10 @@
         <div class="top-row">
           <div>
             <h2 id="greeting"></h2>
-            <p class="subtitle">Thanks for helping keep campus clean 💚</p>
+            <div class="subtitle" style="margin:0;">
+              <span id="titleLine">Thanks for helping keep campus clean 💚</span>
+              · <button id="switchUserBtn" class="link-btn" type="button">Not you? Switch user</button>
+            </div>
           </div>
           <button id="logoutBtn" class="btn secondary">Log out</button>
         </div>
@@ -288,15 +394,41 @@
         <div class="points-card">
           <div class="points-value" id="pointsValue">0</div>
           pts
+
+          <div class="meta-row">
+            <span class="pill" id="levelPill">Level 1</span>
+            <span class="pill" id="rankPill">Rookie Recycler</span>
+            <span class="pill" id="streakPill">Streak: 0 🔥</span>
+          </div>
+        </div>
+
+        <div id="badgeWrap">
+          <h3 style="margin-bottom:8px;">Badges</h3>
+          <div class="badges" id="badges"></div>
         </div>
 
         <h3>How it works</h3>
         <ol class="how-steps">
-          <li>Get an item at the cafeteria and generate a <strong>CLEAN UP</strong> QR in the app. The cashier scans it.</li>
-          <li>After eating, go to the recycling centre and generate the recycling QR. Staff there scans it when you bin your item.</li>
-          <li>Your points appear in the app after the recycling QR is scanned.</li>
-          <li>Go back to the cafeteria and redeem your points for rewards.</li>
+          <li>At the cafeteria, generate a <strong>ClienUp</strong> QR. The cashier scans it.</li>
+          <li>After eating, go to the recycling centre and generate the recycling QR. Staff scans it.</li>
+          <li>Points + streak bonuses appear after the recycling QR is scanned.</li>
+          <li>Redeem points for rewards.</li>
         </ol>
+      </div>
+
+      <!-- LEADERBOARD -->
+      <div class="card">
+        <div class="top-row" style="margin-bottom:12px;">
+          <div>
+            <h3 style="margin-bottom:4px;">Leaderboard</h3>
+            <p class="subtitle" style="margin:0;">See how you rank vs other ClienUp users 🏆</p>
+          </div>
+          <button id="resetWeekBtn" class="btn small secondary" title="Optional: reset weekly scores">
+            Reset week
+          </button>
+        </div>
+        <div id="leaderboard" class="leaderboard"></div>
+        <div id="leaderMsg" class="subtitle" style="margin-top:10px;"></div>
       </div>
 
       <!-- CURRENT CYCLE -->
@@ -308,8 +440,7 @@
 
         <p style="font-size:13px; margin-top:10px;">
           <span class="step-badge">Step 1</span><br>
-          At the cafeteria, tap the button below to generate your CLEAN UP QR.
-          The cashier scans this when you buy your item.
+          At the cafeteria, tap below to generate your ClienUp QR. The cashier scans it.
         </p>
         <button id="generateCafQrBtn" class="btn">Generate QR for cafeteria</button>
 
@@ -323,8 +454,7 @@
 
         <p style="font-size:13px; margin-top:16px;">
           <span class="step-badge">Step 2</span><br>
-          After you finish eating and are ready to recycle, tap the button below to
-          generate your recycling QR. Staff at the recycling centre scans it.
+          When you recycle, generate your recycling QR. Staff at the recycling centre scans it.
         </p>
         <button id="generateRecycleQrBtn" class="btn" disabled>
           Generate QR for recycling centre
@@ -340,7 +470,6 @@
 
         <label style="margin-top:16px;">Optional proof video</label>
 
-        <!-- Hidden real input -->
         <input
           id="videoInput"
           type="file"
@@ -349,7 +478,6 @@
           style="display:none;"
         />
 
-        <!-- Visible button + filename -->
         <button id="videoChooseBtn" type="button" class="btn small">
           Upload video (optional)
         </button>
@@ -371,18 +499,18 @@
         <div id="rewardMessage" class="message-bar"></div>
 
         <div class="reward-item">
-          <span>Coffee – 30 pts</span>
-          <button class="btn inline reward-btn" data-name="Coffee" data-cost="30">Redeem</button>
+          <span>Coffee – 100 pts</span>
+          <button class="btn inline reward-btn" data-name="Coffee" data-cost="100">Redeem</button>
         </div>
 
         <div class="reward-item">
-          <span>Snack – 50 pts</span>
-          <button class="btn inline reward-btn" data-name="Snack" data-cost="50">Redeem</button>
+          <span>Cookie – 150 pts</span>
+          <button class="btn inline reward-btn" data-name="Cookie" data-cost="150">Redeem</button>
         </div>
 
         <div class="reward-item">
-          <span>Sandwich – 80 pts</span>
-          <button class="btn inline reward-btn" data-name="Sandwich" data-cost="80">Redeem</button>
+          <span>Sandwich – 250 pts</span>
+          <button class="btn inline reward-btn" data-name="Sandwich" data-cost="250">Redeem</button>
         </div>
 
         <div id="codeBox" class="code-box">
@@ -398,14 +526,84 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 
   <script>
-    // Simple state
+    /***************
+     * GAMIFICATION
+     ***************/
+    const STORAGE_KEY = "clienup_v1";
+
+    // Demo competitors (replace with real server data later)
+    const demoUsers = [
+      { name: "Leo",   score: 120 },
+      { name: "Sara",  score: 95  },
+      { name: "Nora",  score: 70  },
+      { name: "Omar",  score: 55  },
+      { name: "Ana",   score: 40  }
+    ];
+
+    function todayKey() {
+      const d = new Date();
+      const yyyy = d.getFullYear();
+      const mm = String(d.getMonth()+1).padStart(2, "0");
+      const dd = String(d.getDate()).padStart(2, "0");
+      return `${yyyy}-${mm}-${dd}`;
+    }
+
+    function calcLevel(points) {
+      return Math.max(1, Math.floor(points / 50) + 1);
+    }
+
+    function calcTitle(points) {
+      if (points >= 400) return "Campus Legend";
+      if (points >= 250) return "Eco Captain";
+      if (points >= 150) return "Green Champion";
+      if (points >= 80)  return "Recycling Pro";
+      if (points >= 30)  return "Committed Cleaner";
+      return "Rookie Recycler";
+    }
+
+    function calcBadges(points, itemsDone, streak) {
+      const badges = [];
+      if (points >= 10)  badges.push("First Cleanup ✅");
+      if (itemsDone >= 5) badges.push("5 Items ♻️");
+      if (itemsDone >= 10) badges.push("10 Items 🧹");
+      if (points >= 100) badges.push("100 Points 💯");
+      if (points >= 200) badges.push("200 Points 🚀");
+      if (streak >= 3)   badges.push("3-Day Streak 🔥");
+      if (streak >= 7)   badges.push("7-Day Streak 🏆");
+      return badges;
+    }
+
+    function loadState() {
+      try {
+        const raw = localStorage.getItem(STORAGE_KEY);
+        if (!raw) return null;
+        return JSON.parse(raw);
+      } catch {
+        return null;
+      }
+    }
+
+    function saveState(state) {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    /***************
+     * APP STATE
+     ***************/
     let user = null;
     let points = 0;
     let nextCycleId = 1;
-    let currentCycle = null; // {id, cafeTime, cafeQr, recycleTime, recycleQr, points, videoUrl}
+    let currentCycle = null;
     let history = [];
 
-    // Elements
+    let weeklyScore = 0;
+
+    let streak = 0;
+    let lastRecycleDay = null;
+
+    /***************
+     * Elements
+     ***************/
     const loginView   = document.getElementById("loginView");
     const mainView    = document.getElementById("mainView");
     const nameInput   = document.getElementById("nameInput");
@@ -413,7 +611,13 @@
     const loginBtn    = document.getElementById("loginBtn");
     const logoutBtn   = document.getElementById("logoutBtn");
     const greeting    = document.getElementById("greeting");
+    const titleLine   = document.getElementById("titleLine");
     const pointsValue = document.getElementById("pointsValue");
+
+    const levelPill = document.getElementById("levelPill");
+    const rankPill  = document.getElementById("rankPill");
+    const streakPill = document.getElementById("streakPill");
+    const badgesEl = document.getElementById("badges");
 
     const loginMessage   = document.getElementById("loginMessage");
     const cycleStatus    = document.getElementById("cycleStatus");
@@ -433,6 +637,12 @@
     const cafQrContainer     = document.getElementById("cafQrContainer");
     const recycleQrContainer = document.getElementById("recycleQrContainer");
 
+    const leaderboardEl = document.getElementById("leaderboard");
+    const leaderMsgEl = document.getElementById("leaderMsg");
+    const resetWeekBtn = document.getElementById("resetWeekBtn");
+
+    const switchUserBtn = document.getElementById("switchUserBtn");
+
     function showMessage(el, text, type) {
       el.textContent = text;
       el.className = "message-bar " + (type || "error");
@@ -451,11 +661,7 @@
         cafQrContainer.innerHTML = '<span style="font-size:11px; color:#555;">No QR generated yet.</span>';
         return;
       }
-      new QRCode(cafQrContainer, {
-        text,
-        width: 150,
-        height: 150
-      });
+      new QRCode(cafQrContainer, { text, width: 150, height: 150 });
     }
 
     function renderQRRecycle(text) {
@@ -464,27 +670,137 @@
         recycleQrContainer.innerHTML = '<span style="font-size:11px; color:#555;">No QR generated yet.</span>';
         return;
       }
-      new QRCode(recycleQrContainer, {
-        text,
-        width: 150,
-        height: 150
+      new QRCode(recycleQrContainer, { text, width: 150, height: 150 });
+    }
+
+    function renderBadges() {
+      const itemsDone = history.length;
+      const b = calcBadges(points, itemsDone, streak);
+      badgesEl.innerHTML = b.length ? "" : '<span class="subtitle">No badges yet — complete your first item!</span>';
+      b.forEach(x => {
+        const s = document.createElement("span");
+        s.className = "badge";
+        s.textContent = x;
+        badgesEl.appendChild(s);
       });
+    }
+
+    function buildLeaderboard() {
+      const rows = [...demoUsers.map(u => ({ ...u })), user ? { name: user.name, score: weeklyScore, me: true } : null]
+        .filter(Boolean);
+
+      rows.sort((a,b) => b.score - a.score);
+
+      leaderboardEl.innerHTML = "";
+      rows.forEach((r, idx) => {
+        const div = document.createElement("div");
+        div.className = "leader-row";
+
+        const left = document.createElement("div");
+        left.className = "leader-left";
+
+        const rank = document.createElement("div");
+        rank.className = "rank-badge";
+        rank.textContent = String(idx + 1);
+
+        const nameWrap = document.createElement("div");
+        nameWrap.style.minWidth = "0";
+
+        const name = document.createElement("div");
+        name.className = "leader-name";
+        name.textContent = r.name;
+
+        const sub = document.createElement("div");
+        sub.className = "leader-sub";
+        sub.textContent = (r.me ? "You" : "ClienUp user") + " • " + calcTitle(r.score);
+
+        nameWrap.appendChild(name);
+        nameWrap.appendChild(sub);
+
+        left.appendChild(rank);
+        left.appendChild(nameWrap);
+
+        if (r.me) {
+          const me = document.createElement("span");
+          me.className = "me-badge";
+          me.textContent = "ME";
+          left.appendChild(me);
+        }
+
+        const right = document.createElement("div");
+        right.className = "leader-right";
+        right.innerHTML = `${r.score}<div style="font-size:11px; font-weight:700; color:#335;">weekly pts</div>`;
+
+        div.appendChild(left);
+        div.appendChild(right);
+        leaderboardEl.appendChild(div);
+      });
+
+      if (!user) {
+        leaderMsgEl.textContent = "Log in to join the leaderboard.";
+        return;
+      }
+
+      const myIndex = rows.findIndex(x => x.me);
+      const above = rows[myIndex - 1];
+      if (myIndex === 0) {
+        leaderMsgEl.textContent = "You’re #1 this week 🥇 keep it up!";
+      } else if (above) {
+        const gap = Math.max(0, above.score - weeklyScore);
+        leaderMsgEl.textContent = `You’re #${myIndex+1}. Only ${gap} pts to pass ${above.name}.`;
+      } else {
+        leaderMsgEl.textContent = "";
+      }
+    }
+
+    function persistIfLoggedIn() {
+      if (!user) return;
+      saveState({
+        user,
+        points,
+        weeklyScore,
+        nextCycleId,
+        currentCycle,
+        history,
+        streak,
+        lastRecycleDay
+      });
+    }
+
+    function hydrateFromStorage() {
+      const s = loadState();
+      if (!s) return;
+      user = s.user || null;
+      points = s.points || 0;
+      weeklyScore = s.weeklyScore || 0;
+      nextCycleId = s.nextCycleId || 1;
+      currentCycle = s.currentCycle || null;
+      history = s.history || [];
+      streak = s.streak || 0;
+      lastRecycleDay = s.lastRecycleDay || null;
     }
 
     function render() {
       if (!user) {
         loginView.style.display = "block";
         mainView.style.display = "none";
+        buildLeaderboard();
         return;
       }
 
       loginView.style.display = "none";
       mainView.style.display = "block";
 
+      const lvl = calcLevel(points);
+      const title = calcTitle(points);
+
       greeting.textContent = "Hi, " + user.name;
       pointsValue.textContent = points;
+      levelPill.textContent = "Level " + lvl;
+      rankPill.textContent = title;
+      streakPill.textContent = "Streak: " + streak + " 🔥";
+      titleLine.textContent = `Status: ${title} • keep going 💚`;
 
-      // Current cycle UI
       if (!currentCycle) {
         cycleStatus.textContent = "No item started yet";
         cycleStatus.className = "status-pill";
@@ -505,7 +821,6 @@
         renderQRRecycle(currentCycle.recycleQr);
       }
 
-      // History
       if (history.length === 0) {
         historyList.innerHTML = "<p>No items completed yet.</p>";
       } else {
@@ -527,9 +842,14 @@
           historyList.appendChild(div);
         });
       }
+
+      renderBadges();
+      buildLeaderboard();
+      persistIfLoggedIn();
     }
 
-    // LOGIN
+    hydrateFromStorage();
+
     loginBtn.onclick = () => {
       clearMessage(loginMessage);
       const name = nameInput.value.trim();
@@ -539,25 +859,60 @@
         return;
       }
       user = { name, email };
+      if (!loadState()) {
+        points = 0;
+        weeklyScore = 0;
+        nextCycleId = 1;
+        currentCycle = null;
+        history = [];
+        streak = 0;
+        lastRecycleDay = null;
+      }
       render();
     };
 
-    // LOGOUT
+    // Option B: "Not you? Switch user" (keeps app realistic, dev-friendly)
+    switchUserBtn.onclick = () => {
+      if (!confirm("Switch user? This will log you out on this device.")) return;
+      localStorage.removeItem(STORAGE_KEY);
+      user = null;
+      points = 0;
+      weeklyScore = 0;
+      currentCycle = null;
+      history = [];
+      streak = 0;
+      lastRecycleDay = null;
+      // Keep any messages clean
+      clearMessage(loginMessage);
+      clearMessage(rewardMessage);
+      clearMessage(cycleMessage);
+      // Show login again
+      render();
+    };
+
     logoutBtn.onclick = () => {
       if (!confirm("Log out?")) return;
       user = null;
       points = 0;
+      weeklyScore = 0;
       currentCycle = null;
       history = [];
+      streak = 0;
+      lastRecycleDay = null;
       codeBox.style.display = "none";
       clearMessage(rewardMessage);
+      localStorage.removeItem(STORAGE_KEY);
       render();
     };
 
-    // VIDEO CHOOSE BUTTON
-    videoChooseBtn.onclick = () => {
-      videoInput.click();
+    resetWeekBtn.onclick = () => {
+      if (!user) return;
+      if (!confirm("Reset your weekly score to 0? (Lifetime points stay the same)")) return;
+      weeklyScore = 0;
+      render();
     };
+
+    videoChooseBtn.onclick = () => videoInput.click();
 
     videoInput.addEventListener("change", () => {
       if (videoInput.files && videoInput.files[0]) {
@@ -567,13 +922,12 @@
       }
     });
 
-    // STEP 1: generate cafeteria QR
     generateCafQrBtn.onclick = () => {
       clearMessage(cycleMessage);
       if (currentCycle && !currentCycle.recycleTime) {
         showMessage(
           cycleMessage,
-          "You already have an item in progress. Generate the recycling QR to finish it before starting a new one.",
+          "You already have an item in progress. Finish it at the recycling centre before starting a new one.",
           "error"
         );
         return;
@@ -584,7 +938,7 @@
 
       const now = new Date().toLocaleString();
       const id  = nextCycleId++;
-      const cafToken = "CLEANUP_CAF_" + id + "_" + Date.now();
+      const cafToken = "CLIENUP_CAF_" + id + "_" + Date.now();
 
       currentCycle = {
         id,
@@ -604,7 +958,30 @@
       render();
     };
 
-    // STEP 2: generate recycling QR
+    function applyStreakBonus() {
+      const today = todayKey();
+      if (!lastRecycleDay) {
+        streak = 1;
+        lastRecycleDay = today;
+        return 0;
+      }
+      if (lastRecycleDay === today) return 0;
+
+      const d = new Date(today);
+      const y = new Date(d);
+      y.setDate(y.getDate() - 1);
+      const yKey = `${y.getFullYear()}-${String(y.getMonth()+1).padStart(2,"0")}-${String(y.getDate()).padStart(2,"0")}`;
+
+      if (lastRecycleDay === yKey) streak += 1;
+      else streak = 1;
+
+      lastRecycleDay = today;
+
+      if (streak >= 7) return 6;
+      if (streak >= 3) return 3;
+      return 1;
+    }
+
     generateRecycleQrBtn.onclick = () => {
       clearMessage(cycleMessage);
       if (!currentCycle || currentCycle.recycleTime) {
@@ -617,16 +994,18 @@
       }
 
       const file = videoInput.files[0];
-      if (file) {
-        currentCycle.videoUrl = URL.createObjectURL(file);
-      }
+      if (file) currentCycle.videoUrl = URL.createObjectURL(file);
 
       const now = new Date().toLocaleString();
-      const recToken = "CLEANUP_REC_" + currentCycle.id + "_" + Date.now();
+      const recToken = "CLIENUP_REC_" + currentCycle.id + "_" + Date.now();
       currentCycle.recycleTime = now;
       currentCycle.recycleQr = recToken;
 
-      points += currentCycle.points;
+      const streakBonus = applyStreakBonus();
+      const earned = currentCycle.points + streakBonus;
+
+      points += earned;
+      weeklyScore += earned;
 
       history.unshift({
         id: currentCycle.id,
@@ -634,22 +1013,22 @@
         cafeQr: currentCycle.cafeQr,
         recycleTime: currentCycle.recycleTime,
         recycleQr: currentCycle.recycleQr,
-        points: currentCycle.points,
+        points: earned,
         videoUrl: currentCycle.videoUrl || null
       });
 
       videoInput.value = "";
       videoFileName.textContent = "No file chosen";
 
+      const bonusText = streakBonus ? ` (+${streakBonus} streak bonus 🔥)` : "";
       showMessage(
         cycleMessage,
-        `Recycling QR generated! After staff scans it, your item is completed and +${currentCycle.points} points are added. 🎉`,
+        `Recycling QR generated! Item completed and +${earned} points added.${bonusText} 🎉`,
         "success"
       );
       render();
     };
 
-    // REWARDS
     function makeCode() {
       return Math.random().toString(36).substring(2, 8).toUpperCase();
     }
@@ -683,4 +1062,6 @@
   </script>
 </body>
 </html>
+```
+
 
